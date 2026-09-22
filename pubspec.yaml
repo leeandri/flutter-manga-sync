@@ -1,6 +1,6 @@
 name: flutter_manga_sync
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0+1
 
 environment:
@@ -10,10 +10,21 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Réseau
+  dio: ^5.4.0
+
+  # Stockage Sécurisé (JWT Token) & Cache Local (Hive)
+  flutter_secure_storage: ^9.0.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Gestion d'état & Injection de dépendances (Riverpod)
+  flutter_riverpod: ^2.5.1
+  equatable: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
-
-flutter:
-  uses-material-design: true
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.8
+  mockito: ^5.4.4
