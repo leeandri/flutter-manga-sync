@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_manga_sync/features/manga/presentation/providers/manga_providers.dart';
+import 'package:flutter_manga_sync/features/manga/presentation/screens/manga_detail_screen.dart';
+import 'package:flutter_manga_sync/features/manga/presentation/screens/manga_favorites_screen.dart';
+import 'package:flutter_manga_sync/features/auth/presentation/screens/login_screen.dart';
 
 class MangaCatalogScreen extends ConsumerWidget {
   const MangaCatalogScreen({super.key});
@@ -10,11 +13,41 @@ class MangaCatalogScreen extends ConsumerWidget {
     final mangaListAsync = ref.watch(mangaListProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('MangaSync Catalog'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('MangaSync Catalog'),
+        centerTitle: true,
+        actions: [
+          // Bouton 1 : Voir la liste des Favoris
+          IconButton(
+            icon: const Icon(Icons.collections_bookmark, color: Colors.amber),
+            tooltip: 'My Offline Favorites',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MangaFavoritesScreen()),
+              );
+            },
+          ),
+          // Bouton 2 : Se déconnecter
+          IconButton(
+            icon: const Icon(Icons.power_settings_new, color: Colors.redAccent),
+            tooltip: 'Sign Out',
+            onPressed: () async {
+              await ref.read(authStateProvider.notifier).logout();
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              }
+            },
+          ),
+        ],
+      ),
       body: mangaListAsync.when(
         data: (mangas) {
           if (mangas.isEmpty) {
-            return const Center(child: Text('Aucun manga trouvé.'));
+            return const Center(child: Text('No manga found.'));
           }
           return ListView.builder(
             itemCount: mangas.length,
@@ -23,6 +56,14 @@ class MangaCatalogScreen extends ConsumerWidget {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: ListTile(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MangaDetailScreen(manga: manga),
+                      ),
+                    );
+                  },
                   leading: manga.coverUrl.isNotEmpty
                       ? Image.network(
                           manga.coverUrl,
@@ -43,6 +84,7 @@ class MangaCatalogScreen extends ConsumerWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  trailing: const Icon(Icons.chevron_right),
                 ),
               );
             },
@@ -58,13 +100,13 @@ class MangaCatalogScreen extends ConsumerWidget {
                 const Icon(Icons.error_outline, color: Colors.red, size: 48),
                 const SizedBox(height: 8),
                 Text(
-                  'Erreur : ${err.toString().replaceAll('Exception: ', '')}',
+                  'Error: ${err.toString().replaceAll('Exception: ', '')}',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => ref.invalidate(mangaListProvider),
-                  child: const Text('Réessayer'),
+                  child: const Text('Retry'),
                 ),
               ],
             ),

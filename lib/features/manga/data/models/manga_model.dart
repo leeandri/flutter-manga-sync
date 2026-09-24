@@ -4,23 +4,43 @@ class MangaModel extends Manga {
   const MangaModel({
     required super.id,
     required super.title,
-    required super.coverUrl,
     required super.description,
+    required super.coverUrl,
   });
 
   factory MangaModel.fromJson(Map<String, dynamic> json) {
-    final attributes = json['attributes'] as Map<String, dynamic>? ?? {};
-    final posterImage =
-        attributes['posterImage'] as Map<String, dynamic>? ?? {};
+    // 1. Conversion sécurisée de la map d'attributs
+    final attributesRaw = json['attributes'];
+    final Map<String, dynamic> attributes = attributesRaw is Map
+        ? Map<String, dynamic>.from(
+            attributesRaw.map((k, v) => MapEntry(k.toString(), v)),
+          )
+        : {};
+
+    // 2. Conversion sécurisée de la map d'images
+    final posterImageRaw = attributes['posterImage'];
+    final Map<String, dynamic> posterImage = posterImageRaw is Map
+        ? Map<String, dynamic>.from(
+            posterImageRaw.map((k, v) => MapEntry(k.toString(), v)),
+          )
+        : {};
 
     return MangaModel(
       id: json['id']?.toString() ?? '',
-      title:
-          attributes['canonicalTitle'] ??
-          attributes['titles']?['en'] ??
-          'Untitled',
-      coverUrl: posterImage['small'] ?? posterImage['original'] ?? '',
-      description: attributes['synopsis'] ?? 'No description available.',
+      title: attributes['canonicalTitle']?.toString() ?? 'Sans titre',
+      description: attributes['synopsis']?.toString() ?? '',
+      coverUrl: posterImage['small']?.toString() ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'attributes': {
+        'canonicalTitle': title,
+        'synopsis': description,
+        'posterImage': {'small': coverUrl},
+      },
+    };
   }
 }
