@@ -9,8 +9,8 @@ import 'package:flutter_manga_sync/features/manga/data/datasources/manga_local_d
 import 'package:flutter_manga_sync/features/manga/data/repositories/manga_repository_impl.dart';
 
 import 'package:flutter_manga_sync/features/manga/domain/entities/manga.dart';
-
 import 'package:flutter_manga_sync/features/manga/domain/repositories/manga_repository.dart';
+import 'package:flutter_manga_sync/features/manga/domain/usecases/get_manga_list.dart';
 
 final secureStorageServiceProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService(const FlutterSecureStorage());
@@ -41,9 +41,14 @@ final mangaRepositoryProvider = Provider<MangaRepository>((ref) {
   return MangaRepositoryImpl(dio, localDataSource);
 });
 
-final mangaListProvider = FutureProvider<List<Manga>>((ref) async {
+final getMangaListUseCaseProvider = Provider<GetMangaListUseCase>((ref) {
   final repository = ref.watch(mangaRepositoryProvider);
-  final result = await repository.getMangaList();
+  return GetMangaListUseCase(repository);
+});
+
+final mangaListProvider = FutureProvider<List<Manga>>((ref) async {
+  final getMangaListUseCase = ref.watch(getMangaListUseCaseProvider);
+  final Result<List<Manga>> result = await getMangaListUseCase();
 
   return switch (result) {
     Success(:final data) => data,

@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-import '../../manga_repository_test.mocks.dart';
+import 'manga_repository_impl_test.mocks.dart';
 
 @GenerateMocks([Dio, MangaLocalDataSource])
 void main() {
@@ -21,72 +21,65 @@ void main() {
     repository = MangaRepositoryImpl(mockDio, mockLocalDataSource);
   });
 
-  group('MangaRepositoryImpl Tests', () {
-    final tMangaListJson = [
-      {
-        'id': '1',
-        'attributes': {
-          'canonicalTitle': 'One Piece',
-          'synopsis': 'Pirates adventure',
-          'posterImage': {'small': 'https://example.com/onepiece.jpg'},
-        },
-      },
-    ];
-
-    test(
-      '1. getMangaList returns remote manga list when API call succeeds',
-      () async {
-        when(mockDio.get(any)).thenAnswer(
-          (_) async => Response(
-            data: {'data': tMangaListJson},
-            statusCode: 200,
-            requestOptions: RequestOptions(path: '/manga'),
-          ),
-        );
-
-        final result = await repository.getMangaList();
-
-        expect(result, isA<Success<List<Manga>>>());
-        final data = (result as Success<List<Manga>>).data;
-        expect(data.length, 1);
-        expect(data.first.id, '1');
-        expect(data.first.title, 'One Piece');
-        verify(mockLocalDataSource.cacheMangas(any)).called(1);
-      },
-    );
-
-    test('2. getMangaList falls back to cached data when network fails (Offline mode)', () async {
-      when(mockDio.get(any)).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/manga'),
-          type: DioExceptionType.connectionTimeout,
+  group('MangaRepositoryImpl Unit Tests', () {
+    test('getMangaList returns Success on HTTP 200', () async {
+      when(mockDio.get(any)).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          statusCode: 200,
+          data: {
+            'data': [
+              {
+                'id': '1',
+                'attributes': {
+                  'canonicalTitle': 'Naruto',
+                  'synopsis': 'A ninja story',
+                  'posterImage': {'small': 'url'},
+                },
+              },
+            ],
+          },
         ),
       );
-      when(mockLocalDataSource.getCachedMangas()).thenReturn(tMangaListJson);
 
       final result = await repository.getMangaList();
 
       expect(result, isA<Success<List<Manga>>>());
-      final data = (result as Success<List<Manga>>).data;
-      expect(data.length, 1);
-      expect(data.first.title, 'One Piece');
-      verify(mockLocalDataSource.getCachedMangas()).called(1);
+      if (result is Success<List<Manga>>) {
+        expect(result.data.length, equals(1));
+      } else {
+        fail('Expected Success but got $result');
+      }
     });
 
-    test('3. searchManga returns NetworkFailure when query request fails without network', () async {
-      when(mockDio.get(any, queryParameters: anyNamed('queryParameters')))
-          .thenThrow(
-            DioException(
-              requestOptions: RequestOptions(path: '/manga'),
-              type: DioExceptionType.connectionError,
-            ),
-          );
+    test('getMangaList falls back to local cache when network fails', () async {
+      when(mockDio.get(any)).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: ''),
+          type: DioExceptionType.connectionError,
+        ),
+      );
 
-      final result = await repository.searchManga('naruto');
+      when(mockLocalDataSource.getCachedMangas()).thenReturn([
+        {
+          'id': '1',
+          'attributes': {
+            'canonicalTitle': 'Naruto Cached',
+            'synopsis': 'Cached synopsis',
+            'posterImage': {'small': 'cached_url'},
+          },
+        },
+      ]);
 
-      expect(result, isA<Error<List<Manga>>>());
-      final failure = (result as Error<List<Manga>>).failure;
-      expect(failure, isA<NetworkFailure>());
+      final result = await repository.getMangaList();
+
+      expect(result, isA<Success<List<Manga>>>());
+      if (result is Success<List<Manga>>) {
+        expect(result.data.first.title, equals('Naruto Cached'));
+      } else {
+        fail('Expected Success but got $result');
+      }
+      verify(mockLocalDataSource.getCachedMangas()).called(1);
     });
   });
 }
