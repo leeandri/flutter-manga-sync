@@ -13,15 +13,22 @@ class AuthRepository {
         'https://reqres.in/api/login',
         data: {'email': email, 'password': password},
       );
-      final token = response.data['token']?.toString() ?? 'token_jwt_secour';
-      await _storage.write(key: 'jwt_token', value: token);
+
+      final token = response.data['token']?.toString() ?? 'mock_jwt_token_123';
+      await _storage.saveToken(token);
       return token;
+    } on DioException catch (e) {
+      throw Exception('Network error or invalid credentials: ${e.message}');
     } catch (e) {
-      throw Exception('Erreur d’authentification : ${e.toString()}');
+      throw Exception('Login failed: $e');
     }
   }
 
   Future<void> logout() async {
-    await _storage.delete(key: 'jwt_token');
+    await _storage.deleteToken();
+  }
+
+  Future<String?> getToken() async {
+    return await _storage.getToken();
   }
 }

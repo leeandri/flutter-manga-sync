@@ -9,7 +9,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
-  await Hive.openBox(MangaLocalDataSourceImpl.boxName);
+  await Hive.openBox(MangaLocalDataSourceImpl.cacheBoxName);
   await Hive.openBox(MangaLocalDataSourceImpl.favoritesBoxName);
 
   runApp(const ProviderScope(child: MyApp()));

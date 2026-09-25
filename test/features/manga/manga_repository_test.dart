@@ -1,14 +1,15 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_manga_sync/core/errors/failures.dart';
 import 'package:flutter_manga_sync/features/manga/data/datasources/manga_local_datasource.dart';
 import 'package:flutter_manga_sync/features/manga/data/repositories/manga_repository_impl.dart';
+import 'package:flutter_manga_sync/features/manga/domain/entities/manga.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 
-class MockDio extends Mock implements Dio {}
+import 'manga_repository_test.mocks.dart';
 
-class MockMangaLocalDataSource extends Mock implements MangaLocalDataSource {}
-
+@GenerateMocks([Dio, MangaLocalDataSource])
 void main() {
   late MangaRepositoryImpl repository;
   late MockDio mockDio;
@@ -20,70 +21,74 @@ void main() {
     repository = MangaRepositoryImpl(mockDio, mockLocalDataSource);
   });
 
-  group('MangaRepositoryImpl Tests', () {
-    final mockApiResponse = {
-      'data': [
-        {
-          'id': '1',
-          'attributes': {
-            'canonicalTitle': 'One Piece',
-            'synopsis': 'Pirates adventure',
-            'posterImage': {'small': 'https://example.com/onepiece.jpg'},
-          },
+  group('getMangaList', () {
+    final tMangaListJson = [
+      {
+        'id': '1',
+        'attributes': {
+          'canonicalTitle': 'One Piece',
+          'synopsis': 'Pirates adventure',
+          'posterImage': {'small': 'https://example.com/onepiece.jpg'},
         },
-      ],
-    };
-
-    test('should return list of mangas when API call is successful', () async {
-      when(() => mockDio.get(any())).thenAnswer(
-        (_) async => Response(
-          data: mockApiResponse,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: ''),
-        ),
-      );
-      when(() => mockLocalDataSource.cacheMangas(any()))
-          .thenAnswer((_) async {});
-
-      final result = await repository.getMangaList();
-
-      expect(result, isA<Success>());
-      verify(() => mockLocalDataSource.cacheMangas(any())).called(1);
-    });
+      },
+    ];
 
     test(
-      'should return cached mangas when API fails but Hive cache is available',
+      'should return remote manga list when API call is successful',
       () async {
-        when(() => mockDio.get(any()))
-            .thenThrow(DioException(requestOptions: RequestOptions(path: '')));
-        when(() => mockLocalDataSource.getCachedMangas()).thenReturn([
-          {
-            'id': '1',
-            'attributes': {
-              'canonicalTitle': 'One Piece Cached',
-              'synopsis': 'Cached synopsis',
-              'posterImage': {'small': ''},
-            },
-          },
-        ]);
+        when(mockDio.get(any)).thenAnswer(
+          (_) async => Response(
+            data: {'data': tMangaListJson},
+            statusCode: 200,
+            requestOptions: RequestOptions(path: '/manga'),
+          ),
+        );
 
         final result = await repository.getMangaList();
 
-        expect(result, isA<Success>());
-        verify(() => mockLocalDataSource.getCachedMangas()).called(1);
+        expect(result, isA<Success<List<Manga>>>());
+        final data = (result as Success<List<Manga>>).data;
+        expect(data.length, 1);
+        expect(data.first.id, '1');
+        expect(data.first.title, 'One Piece');
+        verify(mockLocalDataSource.cacheMangas(any)).called(1);
       },
     );
 
+    test('should return cached manga when network request fails', () async {
+      when(mockDio.get(any)).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/manga'),
+          type: DioExceptionType.connectionTimeout,
+        ),
+      );
+      when(mockLocalDataSource.getCachedMangas()).thenReturn(tMangaListJson);
+
+      final result = await repository.getMangaList();
+
+      expect(result, isA<Success<List<Manga>>>());
+      final data = (result as Success<List<Manga>>).data;
+      expect(data.length, 1);
+      expect(data.first.title, 'One Piece');
+      verify(mockLocalDataSource.getCachedMangas()).called(1);
+    });
+
     test(
-      'should return ServerFailure when both API and Hive cache fail',
+      'should return ServerFailure when API fails and cache is empty',
       () async {
-        when(() => mockDio.get(any()))
-            .thenThrow(DioException(requestOptions: RequestOptions(path: '')));
-        when(() => mockLocalDataSource.getCachedMangas()).thenReturn([]);
+        when(mockDio.get(any)).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/manga'),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        when(mockLocalDataSource.getCachedMangas()).thenReturn([]);
 
         final result = await repository.getMangaList();
 
-        expect(result, isA<Error>());
+        expect(result, isA<Error<List<Manga>>>());
+        final failure = (result as Error<List<Manga>>).failure;
+        expect(failure, isA<ServerFailure>());
       },
     );
   });

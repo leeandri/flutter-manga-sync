@@ -1,23 +1,24 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_manga_sync/core/constants/api_constants.dart';
 import 'package:flutter_manga_sync/core/network/auth_interceptor.dart';
-import 'package:flutter_manga_sync/core/storage/secure_storage_service.dart';
+import 'package:flutter_manga_sync/features/auth/presentation/providers/auth_provider.dart';
 
-class DioClient {
-  final Dio dio;
+final dioClientProvider = Provider<Dio>((ref) {
+  final storage = ref.watch(secureStorageProvider);
 
-  DioClient(SecureStorageService secureStorageService)
-    : dio = Dio(
-        BaseOptions(
-          baseUrl: ApiConstants.baseUrl,
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 10),
-          headers: {
-            'Content-Type': 'application/vnd.api+json',
-            'Accept': 'application/vnd.api+json',
-          },
-        ),
-      ) {
-    dio.interceptors.add(AuthInterceptor(secureStorageService));
-  }
-}
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: ApiConstants.baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      headers: {
+        'Content-Type': 'application/vnd.api+json',
+        'Accept': 'application/vnd.api+json',
+      },
+    ),
+  );
+
+  dio.interceptors.add(AuthInterceptor(storage));
+  return dio;
+});

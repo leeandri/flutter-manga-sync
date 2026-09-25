@@ -4,12 +4,13 @@ import 'package:flutter_manga_sync/core/storage/secure_storage_service.dart';
 import 'package:flutter_manga_sync/features/manga/data/models/manga_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_manga_sync/core/constants/api_constants.dart';
 import 'package:flutter_manga_sync/core/errors/failures.dart';
 import 'package:flutter_manga_sync/features/manga/data/datasources/manga_local_datasource.dart';
 import 'package:flutter_manga_sync/features/manga/data/repositories/manga_repository_impl.dart';
+
 import 'package:flutter_manga_sync/features/manga/domain/entities/manga.dart';
+
 import 'package:flutter_manga_sync/features/manga/domain/repositories/manga_repository.dart';
 
 final secureStorageServiceProvider = Provider<SecureStorageService>((ref) {
@@ -31,8 +32,7 @@ final dioProvider = Provider<Dio>((ref) {
 });
 
 final mangaLocalDataSourceProvider = Provider<MangaLocalDataSource>((ref) {
-  final box = Hive.box(MangaLocalDataSourceImpl.boxName);
-  return MangaLocalDataSourceImpl(box);
+  return MangaLocalDataSourceImpl();
 });
 
 final mangaRepositoryProvider = Provider<MangaRepository>((ref) {

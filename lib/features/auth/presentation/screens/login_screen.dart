@@ -1,9 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_manga_sync/features/manga/presentation/providers/manga_providers.dart';
 import 'package:flutter_manga_sync/features/manga/presentation/screens/manga_catalog_screen.dart';
 import 'package:flutter_manga_sync/features/auth/presentation/screens/register_screen.dart';
+import 'package:flutter_manga_sync/features/auth/presentation/providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -24,21 +23,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final dio = Dio();
-      final response = await dio.post(
-        'https://reqres.in/api/login',
-        data: {
-          'email': 'eve.holt@reqres.in',
-          'password': _passwordController.text.trim(),
-        },
-      );
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
 
-      final token =
-          response.data['token']?.toString() ??
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake_token";
-
-      // Mise à jour de l'état d'authentification Riverpod
-      await ref.read(authStateProvider.notifier).login(token);
+      await ref.read(authNotifierProvider.notifier).login(email, password);
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -52,7 +40,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
+            content: Text(e.toString().replaceAll('Exception: ', '')),
             backgroundColor: Colors.red,
           ),
         );
