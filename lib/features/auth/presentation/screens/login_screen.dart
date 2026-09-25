@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_manga_sync/features/manga/presentation/providers/manga_providers.dart';
@@ -22,18 +23,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 1));
-    const mockJwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake_token";
-
-    // Met à jour l'état d'authentification dans Riverpod
-    await ref.read(authStateProvider.notifier).login(mockJwtToken);
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MangaCatalogScreen()),
+    try {
+      final dio = Dio();
+      final response = await dio.post(
+        'https://reqres.in/api/login',
+        data: {
+          'email': 'eve.holt@reqres.in',
+          'password': _passwordController.text.trim(),
+        },
       );
+
+      final token =
+          response.data['token']?.toString() ??
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake_token";
+
+      // Mise à jour de l'état d'authentification Riverpod
+      await ref.read(authStateProvider.notifier).login(token);
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MangaCatalogScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
