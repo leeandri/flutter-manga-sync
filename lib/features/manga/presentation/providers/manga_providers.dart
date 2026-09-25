@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_manga_sync/core/network/auth_interceptor.dart';
 import 'package:flutter_manga_sync/core/storage/secure_storage_service.dart';
-import 'package:flutter_manga_sync/features/manga/data/models/manga_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_manga_sync/core/constants/api_constants.dart';
@@ -67,21 +66,32 @@ class FavoritesNotifier extends StateNotifier<List<Manga>> {
   }
 
   void loadFavorites() {
-    final favJson = _localDataSource.getFavorites();
-    state = favJson.map((json) => MangaModel.fromJson(json)).toList();
+    final rawList = _localDataSource.getFavorites();
+
+    final mangaList = rawList
+        .map((e) {
+          if (e is Map) {
+            final Map<String, dynamic> safeMap = Map<String, dynamic>.from(
+              e.map((k, v) => MapEntry(k.toString(), v)),
+            );
+            return Manga.fromKitsuJson(safeMap);
+          }
+          return null;
+        })
+        .whereType<Manga>()
+        .toList();
+
+    state = mangaList;
   }
 
   Future<void> toggleFavorite(Manga manga, Map<String, dynamic> rawJson) async {
-    if (_localDataSource.isFavorite(manga.id)) {
+    final isFav = _localDataSource.isFavorite(manga.id);
+    if (isFav) {
       await _localDataSource.removeFavorite(manga.id);
     } else {
       await _localDataSource.saveFavorite(rawJson);
     }
     loadFavorites();
-  }
-
-  bool isFav(String mangaId) {
-    return _localDataSource.isFavorite(mangaId);
   }
 }
 
@@ -112,3 +122,19 @@ class AuthStateNotifier extends StateNotifier<bool> {
     state = false;
   }
 }
+
+final mangaSearchProvider = FutureProvider.family<List<Manga>, String>((
+  ref,
+  query,
+) async {
+  if (query.isEmpty) return [];
+  final repo = ref.watch(mangaRepositoryProvider);
+  final result = await repo.searchManga(query);
+
+  if (result is Success<List<Manga>>) {
+    return result.data;
+  } else if (result is Error<List<Manga>>) {
+    throw Exception(result.failure.message);
+  }
+  return [];
+});

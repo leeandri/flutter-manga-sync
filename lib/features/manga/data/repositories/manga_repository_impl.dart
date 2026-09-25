@@ -1,52 +1,60 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_manga_sync/core/constants/api_constants.dart';
-import 'package:flutter_manga_sync/core/errors/failures.dart';
-import 'package:flutter_manga_sync/features/manga/data/datasources/manga_local_datasource.dart';
-import 'package:flutter_manga_sync/features/manga/data/models/manga_model.dart';
-import 'package:flutter_manga_sync/features/manga/domain/entities/manga.dart';
-import 'package:flutter_manga_sync/features/manga/domain/repositories/manga_repository.dart';
+
+import '../../../../core/errors/failures.dart';
+import '../../domain/entities/manga.dart';
+import '../../domain/repositories/manga_repository.dart';
+import '../datasources/manga_local_datasource.dart';
 
 class MangaRepositoryImpl implements MangaRepository {
-  final Dio _dio;
-  final MangaLocalDataSource _localDataSource;
+  final Dio dio;
+  final MangaLocalDataSource localDataSource;
 
-  MangaRepositoryImpl(this._dio, this._localDataSource);
+  MangaRepositoryImpl(this.dio, this.localDataSource);
 
   @override
   Future<Result<List<Manga>>> getMangaList() async {
     try {
-      // 1. Tenter la requête réseau (API Kitsu)
-      final response = await _dio.get(
-        '${ApiConstants.baseUrl}${ApiConstants.mangaListEndpoint}',
-      );
+      final response = await dio.get('https://kitsu.io/api/edge/manga');
+      final dataList = response.data['data'] as List;
 
-      final List dataList = response.data['data'] as List;
+      await localDataSource.cacheMangas(dataList);
 
-      // 2. Sauvegarder dans Hive en tâche de fond (Cache)
-      final rawList = List<Map<String, dynamic>>.from(dataList);
-      await _localDataSource.cacheMangas(rawList);
-
-      // 3. Convertir et retourner les données fraîches
       final mangas = dataList
-          .map((json) => MangaModel.fromJson(json as Map<String, dynamic>))
+          .map((e) => Manga.fromKitsuJson(e as Map<String, dynamic>))
           .toList();
-
       return Success(mangas);
-    } catch (e) {
-      // 4. Fallback Mode Hors-ligne : Si le réseau échoue, lire le cache local
-      final cachedJsonList = _localDataSource.getCachedMangas();
-
-      if (cachedJsonList.isNotEmpty) {
-        final cachedMangas = cachedJsonList
-            .map((json) => MangaModel.fromJson(json))
+    } on DioException {
+      final cached = localDataSource.getCachedMangas();
+      if (cached.isNotEmpty) {
+        final mangas = cached
+            .map((e) => Manga.fromKitsuJson(e as Map<String, dynamic>))
             .toList();
-        return Success(cachedMangas);
+        return Success(mangas);
       }
+      return const Error(ServerFailure('Impossible de charger les données.'));
+    } catch (e) {
+      return Error(ServerFailure(e.toString()));
+    }
+  }
 
-      // 5. Si pas de réseau ET pas de cache : renvoyer l'erreur
-      return Error(
-        ServerFailure('Failed to fetch manga list: ${e.toString()}'),
+  @override
+  Future<Result<List<Manga>>> searchManga(String query) async {
+    try {
+      final response = await dio.get(
+        'https://kitsu.io/api/edge/manga',
+        queryParameters: {'filter[text]': query},
       );
+      final dataList = response.data['data'] as List;
+      final mangas = dataList
+          .map((e) => Manga.fromKitsuJson(e as Map<String, dynamic>))
+          .toList();
+      return Success(mangas);
+    } on DioException {
+      return const Error(
+        NetworkFailure('Connexion indisponible pour la recherche.'),
+      );
+    } catch (e) {
+      return Error(ServerFailure(e.toString()));
     }
   }
 }

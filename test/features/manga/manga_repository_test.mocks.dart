@@ -16,7 +16,6 @@ import 'package:dio/src/transformer.dart' as _i4;
 import 'package:flutter_manga_sync/features/manga/data/datasources/manga_local_datasource.dart'
     as _i10;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i11;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -925,40 +924,49 @@ class MockMangaLocalDataSource extends _i1.Mock
   }
 
   @override
-  String get boxName => (super.noSuchMethod(
-        Invocation.getter(#boxName),
-        returnValue: _i11.dummyValue<String>(
-          this,
-          Invocation.getter(#boxName),
-        ),
-      ) as String);
-
-  @override
-  _i8.Future<void> cacheMangas(List<Map<String, dynamic>>? mangas) =>
+  _i8.Future<void> cacheMangas(List<dynamic>? mangasJson) =>
       (super.noSuchMethod(
         Invocation.method(
           #cacheMangas,
-          [mangas],
+          [mangasJson],
         ),
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
       ) as _i8.Future<void>);
 
   @override
-  List<Map<String, dynamic>> getCachedMangas() => (super.noSuchMethod(
+  List<dynamic> getCachedMangas() => (super.noSuchMethod(
         Invocation.method(
           #getCachedMangas,
           [],
         ),
-        returnValue: <Map<String, dynamic>>[],
-      ) as List<Map<String, dynamic>>);
+        returnValue: <dynamic>[],
+      ) as List<dynamic>);
 
   @override
-  _i8.Future<void> saveFavorite(Map<String, dynamic>? manga) =>
+  List<dynamic> getFavorites() => (super.noSuchMethod(
+        Invocation.method(
+          #getFavorites,
+          [],
+        ),
+        returnValue: <dynamic>[],
+      ) as List<dynamic>);
+
+  @override
+  bool isFavorite(String? id) => (super.noSuchMethod(
+        Invocation.method(
+          #isFavorite,
+          [id],
+        ),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  _i8.Future<void> saveFavorite(Map<String, dynamic>? mangaMap) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveFavorite,
-          [manga],
+          [mangaMap],
         ),
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
@@ -973,22 +981,4 @@ class MockMangaLocalDataSource extends _i1.Mock
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
       ) as _i8.Future<void>);
-
-  @override
-  List<Map<String, dynamic>> getFavorites() => (super.noSuchMethod(
-        Invocation.method(
-          #getFavorites,
-          [],
-        ),
-        returnValue: <Map<String, dynamic>>[],
-      ) as List<Map<String, dynamic>>);
-
-  @override
-  bool isFavorite(String? id) => (super.noSuchMethod(
-        Invocation.method(
-          #isFavorite,
-          [id],
-        ),
-        returnValue: false,
-      ) as bool);
 }

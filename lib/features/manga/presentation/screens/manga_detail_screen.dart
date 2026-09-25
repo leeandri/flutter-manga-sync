@@ -31,7 +31,7 @@ class MangaDetailScreen extends ConsumerWidget {
                 'attributes': {
                   'canonicalTitle': manga.title,
                   'synopsis': manga.description,
-                  'posterImage': {'small': manga.coverUrl},
+                  'posterImage': {'small': manga.imageUrl},
                 },
               };
               favoritesNotifier.toggleFavorite(manga, rawJson);
@@ -54,9 +54,9 @@ class MangaDetailScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (manga.coverUrl.isNotEmpty)
+            if (manga.imageUrl != null && manga.imageUrl!.isNotEmpty)
               Image.network(
-                manga.coverUrl,
+                manga.imageUrl!,
                 height: 300,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -86,8 +86,8 @@ class MangaDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    manga.description.isNotEmpty
-                        ? manga.description
+                    (manga.description != null && manga.description!.isNotEmpty)
+                        ? manga.description!
                         : 'No synopsis available.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),

@@ -19,17 +19,18 @@ class MangaFavoritesScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final manga = favorites[index];
                 return ListTile(
-                  leading: manga.coverUrl.isNotEmpty
+                  leading:
+                      (manga.imageUrl != null && manga.imageUrl!.isNotEmpty)
                       ? Image.network(
-                          manga.coverUrl,
+                          manga.imageUrl!,
                           width: 50,
                           fit: BoxFit.cover,
                         )
                       : const Icon(Icons.book),
-                  title: Text(manga.title),
+
                   subtitle: Text(
-                    manga.description,
-                    maxLines: 1,
+                    manga.description ?? '',
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   onTap: () {

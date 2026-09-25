@@ -64,9 +64,10 @@ class MangaCatalogScreen extends ConsumerWidget {
                       ),
                     );
                   },
-                  leading: manga.coverUrl.isNotEmpty
+                  leading:
+                      (manga.imageUrl != null && manga.imageUrl!.isNotEmpty)
                       ? Image.network(
-                          manga.coverUrl,
+                          manga.imageUrl!,
                           width: 50,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) =>
@@ -80,7 +81,7 @@ class MangaCatalogScreen extends ConsumerWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    manga.description,
+                    manga.description ?? '',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
