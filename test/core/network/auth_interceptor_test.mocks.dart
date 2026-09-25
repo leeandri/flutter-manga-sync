@@ -77,43 +77,13 @@ class MockSecureStorageService extends _i1.Mock
       ) as _i4.Future<void>);
 
   @override
-  _i4.Future<void> write({
-    required String? key,
-    required String? value,
-  }) =>
-      (super.noSuchMethod(
+  _i4.Future<bool> hasToken() => (super.noSuchMethod(
         Invocation.method(
-          #write,
+          #hasToken,
           [],
-          {
-            #key: key,
-            #value: value,
-          },
         ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
-
-  @override
-  _i4.Future<void> delete({required String? key}) => (super.noSuchMethod(
-        Invocation.method(
-          #delete,
-          [],
-          {#key: key},
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
-
-  @override
-  _i4.Future<String?> read({required String? key}) => (super.noSuchMethod(
-        Invocation.method(
-          #read,
-          [],
-          {#key: key},
-        ),
-        returnValue: _i4.Future<String?>.value(),
-      ) as _i4.Future<String?>);
+        returnValue: _i4.Future<bool>.value(false),
+      ) as _i4.Future<bool>);
 }
 
 /// A class which mocks [RequestInterceptorHandler].
