@@ -23,8 +23,11 @@ class MangaLocalDataSourceImpl implements MangaLocalDataSource {
   @override
   List<dynamic> getCachedMangas() {
     final box = Hive.box(cacheBoxName);
-    final data = box.get(cacheKey, defaultValue: []);
-    return List<dynamic>.from(data);
+    final data = box.get(cacheKey, defaultValue: <dynamic>[]);
+    if (data is List) {
+      return List<dynamic>.from(data);
+    }
+    return <dynamic>[];
   }
 
   @override

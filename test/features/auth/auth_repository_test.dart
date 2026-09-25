@@ -19,47 +19,73 @@ void main() {
     repository = AuthRepository(mockDio, mockStorage);
   });
 
-  group('login', () {
-    test('should store token on successful login', () async {
-      when(mockDio.post(any, data: anyNamed('data'))).thenAnswer(
+  group('AuthRepository Login', () {
+    test('login returns token and saves it on HTTP 200 success', () async {
+      when(
+        mockDio.post(
+          'https://reqres.in/api/login',
+          data: {'email': 'eve.holt@reqres.in', 'password': 'cityslicka'},
+        ),
+      ).thenAnswer(
         (_) async => Response(
-          data: {'token': 'fake_jwt_token'},
+          requestOptions: RequestOptions(path: ''),
           statusCode: 200,
-          requestOptions: RequestOptions(path: '/login'),
+          data: {'token': 'QpwL5tke4Pnpja7X4'},
         ),
       );
-      when(mockStorage.saveToken(any)).thenAnswer((_) async {});
 
-      await repository.login('test@example.com', 'password123');
+      when(mockStorage.saveToken('QpwL5tke4Pnpja7X4'))
+          .thenAnswer((_) async => true);
 
-      verify(mockStorage.saveToken('fake_jwt_token')).called(1);
+      final token = await repository.login('eve.holt@reqres.in', 'cityslicka');
+
+      expect(token, equals('QpwL5tke4Pnpja7X4'));
+      verify(mockStorage.saveToken('QpwL5tke4Pnpja7X4')).called(1);
     });
 
-    test('should throw Exception when login credentials are invalid', () async {
-      when(mockDio.post(any, data: anyNamed('data'))).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/login'),
-          response: Response(
-            statusCode: 401,
-            requestOptions: RequestOptions(path: '/login'),
-          ),
+    test('login throws Exception when token is missing in response', () async {
+      when(
+        mockDio.post(
+          'https://reqres.in/api/login',
+          data: {'email': 'test@test.com', 'password': 'pass'},
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          statusCode: 200,
+          data: {},
         ),
       );
 
       expect(
-        () => repository.login('wrong@example.com', 'wrongpass'),
+        () async => repository.login('test@test.com', 'pass'),
         throwsA(isA<Exception>()),
       );
     });
   });
 
-  group('logout', () {
-    test('should delete token on logout', () async {
-      when(mockStorage.deleteToken()).thenAnswer((_) async {});
+  group('AuthRepository Register', () {
+    test('register returns token and saves it on HTTP 200 success', () async {
+      when(
+        mockDio.post(
+          'https://reqres.in/api/register',
+          data: {'email': 'eve.holt@reqres.in', 'password': 'pistol'},
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          statusCode: 200,
+          data: {'token': 'QpwL5tke4Pnpja7X4'},
+        ),
+      );
 
-      await repository.logout();
+      when(mockStorage.saveToken('QpwL5tke4Pnpja7X4'))
+          .thenAnswer((_) async => true);
 
-      verify(mockStorage.deleteToken()).called(1);
+      final token = await repository.register('eve.holt@reqres.in', 'pistol');
+
+      expect(token, equals('QpwL5tke4Pnpja7X4'));
+      verify(mockStorage.saveToken('QpwL5tke4Pnpja7X4')).called(1);
     });
   });
 }
