@@ -1,18 +1,31 @@
 # Flutter Manga Sync (`flutter_manga_sync`)
 
-A full-stack, offline-first Flutter application demonstrating **Clean Architecture**, **Feature-First structure**, **Riverpod state management**, **Dio network handling with JWT interceptors**, and **Hive local storage caching**.
+`flutter_manga_sync` is a production-grade, offline-first mobile application built with **Flutter** and **Dart**. The project demonstrates a rigorous implementation of **Clean Architecture** coupled with a **Feature-First folder structure**, robust **Riverpod 2.0 state management**, network isolation using **Dio with custom JWT Interceptors**, local persistence via **Hive**, and full **Repository-layer unit testing with Mocktail**.
 
 ---
 
-## 🌟 Features
+## 🌟 Comprehensive Features
 
-- **Authentication Flow**: Login, Registration, and Logout with secure client-side JWT token storage using `FlutterSecureStorage`.
-- **Manga Catalog Screen (REST API)**: Fetches trending manga data from the live [Kitsu API](https://kitsu.io/api/edge).
-- **Manga Detail Screen**: Displays detailed synopsis, poster artwork, and title information with real-time state toggles.
-- **Offline Favorites Screen (Hive Persisted)**: Bookmark favorite manga locally and access them seamlessly without an active internet connection.
-- **Offline-First Data Strategy**: Automatic network fetch with graceful Hive cache fallback when offline or on network failure.
-- **Network Error Handling**: Custom `Failure` domain mapping with friendly user-facing error UI and retry mechanisms.
-- **Unit Testing**: Repository layer unit tests utilizing `mocktail` covering Success, Offline Cache Fallback, and Server Failure scenarios.
+### 1. Robust Authentication & Session Persistence
+
+- **Token-Based Authentication**: Complete Login, Register, and Logout flows backed by secure token management using `FlutterSecureStorage`.
+- **Automated Authorization Headers**: Built-in `AuthInterceptor` attached to the primary `Dio` HTTP client to automatically inject `Authorization: Bearer <token>` into outgoing network headers.
+- **Linux/Desktop Keyring Resilience**: Includes a graceful in-memory token fallback mechanism for environments where system keyrings (`libsecret`) are locked or restricted.
+
+### 2. Multi-Screen Data Experience (3 Primary Views)
+
+- **Manga Catalog Screen (Live REST API)**: Fetches and displays a dynamic feed of trending manga entities directly from the public [Kitsu API](https://kitsu.io/api/edge/manga).
+- **Manga Detail Screen**: Presents deep entity information including full synopses, canonical poster artwork, and real-time interactive bookmark toggles.
+- **Offline Favorites Screen (Hive Persisted)**: A dedicated collection screen retrieving locally bookmarked manga entities instantly, operating independently of network connectivity.
+
+### 3. Offline-First Resilience & Error Mapping
+
+- **Smart Local Caching**: Every remote API fetch is cached locally via Hive. Should the device disconnect or the API encounter an outage, the repository automatically falls back to cached records.
+- **Explicit Domain Error Handling**: Network failures and timeouts are caught and transformed into typed `Failure` domain objects (`ServerFailure`, `CacheFailure`), delivering clean, user-facing error UI notifications with retry mechanisms.
+
+### 4. Enterprise-Grade Testing
+
+- **Unit Testing**: Comprehensive test suite covering `MangaRepositoryImpl` using `mocktail` to verify API success payloads, offline cache fallback behavior, and dual-failure handling scenarios.
 
 ---
 
@@ -23,28 +36,29 @@ The project strictly adheres to **Clean Architecture** principles combined with 
 ```text
 lib/
 ├── core/
+│   ├── constants/       # Global API endpoints and storage keys
 │   ├── errors/          # Custom Failure domain exceptions & functional Result handling
-│   ├── network/         # Dio HTTP client setup & AuthInterceptor (JWT injection)
-│   └── storage/         # SecureStorageService wrapper with graceful platform fallback
+│   ├── network/         # Dio HTTP client configuration & AuthInterceptor setup
+│   └── storage/         # SecureStorageService wrapper with desktop keyring fallback
 │
 └── features/
-    ├── auth/            # Auth Feature (Login & Register screens, Auth State notifier)
+    ├── auth/            # Auth Feature Module
+    │   ├── data/        # AuthRepository & authentication services
     │   └── presentation/
-    │       └── screens/
-    │           ├── login_screen.dart
-    │           └── register_screen.dart
+    │       ├── providers/ # AuthNotifier state management
+    │       └── screens/   # LoginScreen & RegisterScreen UI views
     │
-    └── manga/           # Manga Feature
+    └── manga/           # Manga Feature Module
         ├── data/
-        │   ├── datasources/   # Remote (Kitsu REST API) & Local (Hive Box)
-        │   ├── models/        # MangaModel JSON serialization
-        │   └── repositories/  # MangaRepositoryImpl (Offline-first data layer)
+        │   ├── datasources/   # MangaRemoteDataSource (Kitsu API) & MangaLocalDataSource (Hive)
+        │   ├── models/        # MangaModel JSON serialization with dynamic map casting
+        │   └── repositories/  # MangaRepositoryImpl (Offline-first orchestration)
         ├── domain/
-        │   ├── entities/      # Pure domain Manga entity
-        │   └── repositories/  # Abstract MangaRepository contract
+        │   ├── entities/      # Pure Domain Manga entity
+        │   └── repositories/  # Abstract MangaRepository interface contract
         └── presentation/
-            ├── providers/     # Riverpod StateNotifier, StateProvider & AsyncValue
-            └── screens/       # MangaCatalogScreen, MangaDetailScreen, MangaFavoritesScreen
+            ├── providers/     # Riverpod StateNotifiers, StateProviders & AsyncValue handling
+            └── screens/       # MangaCatalogScreen, MangaDetailScreen & MangaFavoritesScreen
 ```
 
 ## 🌐 API & External Services

@@ -6,7 +6,6 @@ class SecureStorageService {
 
   SecureStorageService(this._storage);
 
-  // Variable de secours en mémoire si le Keyring Linux est verrouillé
   String? _inMemoryToken;
 
   Future<void> saveToken(String token) async {
@@ -14,7 +13,6 @@ class SecureStorageService {
     try {
       await _storage.write(key: _tokenKey, value: token);
     } catch (e) {
-      // Fallback gracieux sur Linux Desktop si libsecret échoue
       print(
         'Warning: Secure storage unavailable ($e). Using in-memory fallback.',
       );
@@ -36,6 +34,37 @@ class SecureStorageService {
       await _storage.delete(key: _tokenKey);
     } catch (e) {
       // Ignore cleanup error on Linux fallback
+    }
+  }
+
+  Future<void> write({required String key, required String value}) async {
+    if (key == _tokenKey) {
+      await saveToken(value);
+    } else {
+      try {
+        await _storage.write(key: key, value: value);
+      } catch (_) {}
+    }
+  }
+
+  Future<void> delete({required String key}) async {
+    if (key == _tokenKey) {
+      await deleteToken();
+    } else {
+      try {
+        await _storage.delete(key: key);
+      } catch (_) {}
+    }
+  }
+
+  Future<String?> read({required String key}) async {
+    if (key == _tokenKey) {
+      return await getToken();
+    }
+    try {
+      return await _storage.read(key: key);
+    } catch (_) {
+      return null;
     }
   }
 }
