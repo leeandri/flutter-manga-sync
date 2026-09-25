@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_manga_sync/core/errors/failures.dart';
 import 'package:flutter_manga_sync/core/storage/secure_storage_service.dart';
 
 class AuthRepository {
@@ -7,7 +8,7 @@ class AuthRepository {
 
   AuthRepository(this._dio, this._storage);
 
-  Future<String> login(String email, String password) async {
+  Future<Result<String>> login(String email, String password) async {
     try {
       final response = await _dio.post(
         'https://reqres.in/api/login',
@@ -16,27 +17,33 @@ class AuthRepository {
 
       final token = response.data['token']?.toString();
       if (token == null || token.isEmpty) {
-        throw Exception('Invalid response: Auth token is missing.');
+        return const Error(
+          ServerFailure('Invalid response: Auth token is missing.'),
+        );
       }
 
       await _storage.saveToken(token);
-      return token;
+      return Success(token);
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.connectionError) {
-        throw Exception(
-          'Network error: Please check your internet connection.',
+        return const Error(
+          NetworkFailure(
+            'Network error: Please check your internet connection.',
+          ),
         );
       }
       final errorMessage =
-          e.response?.data['error'] ?? e.message ?? 'Authentication failed.';
-      throw Exception('Login failed: $errorMessage');
+          e.response?.data['error']?.toString() ??
+          e.message ??
+          'Authentication failed.';
+      return Error(ServerFailure(errorMessage));
     } catch (e) {
-      throw Exception('Login failed: $e');
+      return Error(ServerFailure('Login failed: $e'));
     }
   }
 
-  Future<String> register(String email, String password) async {
+  Future<Result<String>> register(String email, String password) async {
     try {
       final response = await _dio.post(
         'https://reqres.in/api/register',
@@ -45,30 +52,41 @@ class AuthRepository {
 
       final token = response.data['token']?.toString();
       if (token == null || token.isEmpty) {
-        throw Exception(
-          'Invalid response: Auth token is missing after registration.',
+        return const Error(
+          ServerFailure(
+            'Invalid response: Auth token is missing after registration.',
+          ),
         );
       }
 
       await _storage.saveToken(token);
-      return token;
+      return Success(token);
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.connectionError) {
-        throw Exception(
-          'Network error: Please check your internet connection.',
+        return const Error(
+          NetworkFailure(
+            'Network error: Please check your internet connection.',
+          ),
         );
       }
       final errorMessage =
-          e.response?.data['error'] ?? e.message ?? 'Registration failed.';
-      throw Exception('Registration failed: $errorMessage');
+          e.response?.data['error']?.toString() ??
+          e.message ??
+          'Registration failed.';
+      return Error(ServerFailure(errorMessage));
     } catch (e) {
-      throw Exception('Registration failed: $e');
+      return Error(ServerFailure('Registration failed: $e'));
     }
   }
 
-  Future<void> logout() async {
-    await _storage.deleteToken();
+  Future<Result<void>> logout() async {
+    try {
+      await _storage.deleteToken();
+      return const Success(null);
+    } catch (e) {
+      return Error(CacheFailure('Failed to remove token during logout: $e'));
+    }
   }
 
   Future<String?> getToken() async {

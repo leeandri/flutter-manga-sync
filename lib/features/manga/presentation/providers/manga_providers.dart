@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_manga_sync/core/constants/api_constants.dart';
 import 'package:flutter_manga_sync/core/errors/failures.dart';
+import 'package:flutter_manga_sync/features/auth/data/auth_repository.dart';
 import 'package:flutter_manga_sync/features/manga/data/datasources/manga_local_datasource.dart';
 import 'package:flutter_manga_sync/features/manga/data/repositories/manga_repository_impl.dart';
 
@@ -28,6 +29,12 @@ final dioProvider = Provider<Dio>((ref) {
   final secureStorage = ref.watch(secureStorageServiceProvider);
   dio.interceptors.add(AuthInterceptor(secureStorage));
   return dio;
+});
+
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  final dio = ref.watch(dioProvider);
+  final storage = ref.watch(secureStorageServiceProvider);
+  return AuthRepository(dio, storage);
 });
 
 final mangaLocalDataSourceProvider = Provider<MangaLocalDataSource>((ref) {
@@ -102,13 +109,15 @@ class FavoritesNotifier extends StateNotifier<List<Manga>> {
 
 final authStateProvider = StateNotifierProvider<AuthStateNotifier, bool>((ref) {
   final storage = ref.watch(secureStorageServiceProvider);
-  return AuthStateNotifier(storage);
+  final authRepository = ref.watch(authRepositoryProvider);
+  return AuthStateNotifier(storage, authRepository);
 });
 
 class AuthStateNotifier extends StateNotifier<bool> {
   final SecureStorageService _storage;
+  final AuthRepository _authRepository;
 
-  AuthStateNotifier(this._storage) : super(false) {
+  AuthStateNotifier(this._storage, this._authRepository) : super(false) {
     checkAuthStatus();
   }
 
@@ -123,7 +132,7 @@ class AuthStateNotifier extends StateNotifier<bool> {
   }
 
   Future<void> logout() async {
-    await _storage.deleteToken();
+    await _authRepository.logout();
     state = false;
   }
 }
