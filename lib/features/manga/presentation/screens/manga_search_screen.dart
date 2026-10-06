@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_manga_sync/core/widgets/language_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/manga_providers.dart';
@@ -26,7 +27,10 @@ class _MangaSearchScreenState extends ConsumerState<MangaSearchScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Rechercher un Manga (REST API)')),
+      appBar: AppBar(
+        title: const Text('Rechercher un Manga (REST API)'),
+        actions: const [LanguageSelector()],
+      ),
       body: Column(
         children: [
           Padding(

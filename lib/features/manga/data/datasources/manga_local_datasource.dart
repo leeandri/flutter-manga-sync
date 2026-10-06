@@ -14,6 +14,26 @@ class MangaLocalDataSourceImpl implements MangaLocalDataSource {
   static const String favoritesBoxName = 'manga_favorites_box';
   static const String cacheKey = 'cached_manga_list';
 
+  Map<String, dynamic> _normalizeMap(dynamic input) {
+    if (input is Map) {
+      return Map<String, dynamic>.from(
+        input.map(
+          (key, value) => MapEntry(key.toString(), _normalizeValue(value)),
+        ),
+      );
+    }
+    return <String, dynamic>{};
+  }
+
+  dynamic _normalizeValue(dynamic value) {
+    if (value is Map) {
+      return _normalizeMap(value);
+    } else if (value is List) {
+      return value.map(_normalizeValue).toList();
+    }
+    return value;
+  }
+
   @override
   Future<void> cacheMangas(List<dynamic> mangasJson) async {
     final box = Hive.box(cacheBoxName);
@@ -25,7 +45,7 @@ class MangaLocalDataSourceImpl implements MangaLocalDataSource {
     final box = Hive.box(cacheBoxName);
     final data = box.get(cacheKey, defaultValue: <dynamic>[]);
     if (data is List) {
-      return List<dynamic>.from(data);
+      return data.map((item) => _normalizeValue(item)).toList();
     }
     return <dynamic>[];
   }
@@ -33,7 +53,7 @@ class MangaLocalDataSourceImpl implements MangaLocalDataSource {
   @override
   List<dynamic> getFavorites() {
     final box = Hive.box(favoritesBoxName);
-    return box.values.toList();
+    return box.values.map((item) => _normalizeValue(item)).toList();
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_manga_sync/core/widgets/language_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_manga_sync/features/auth/presentation/providers/auth_provider.dart';
 
@@ -52,7 +53,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
+      appBar: AppBar(
+        title: const Text('Sign Up'),
+        actions: const [LanguageSelector()],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

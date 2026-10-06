@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_manga_sync/core/widgets/language_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_manga_sync/features/manga/presentation/providers/manga_providers.dart';
 import 'package:flutter_manga_sync/features/manga/presentation/screens/manga_detail_screen.dart';
@@ -20,7 +21,7 @@ class MangaCatalogScreen extends ConsumerWidget {
           SizedBox(width: 8),
           Flexible(
             child: Text(
-              'Mode hors ligne : affichage des données en cache',
+              'Offline mode: displaying cached data',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -43,6 +44,7 @@ class MangaCatalogScreen extends ConsumerWidget {
         title: const Text('MangaSync Catalog'),
         centerTitle: true,
         actions: [
+          const LanguageSelector(),
           IconButton(
             icon: const Icon(Icons.collections_bookmark, color: Colors.amber),
             tooltip: 'My Offline Favorites',

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_manga_sync/core/network/auth_interceptor.dart';
 import 'package:flutter_manga_sync/core/storage/secure_storage_service.dart';
@@ -151,4 +153,8 @@ final mangaSearchProvider = FutureProvider.family<List<Manga>, String>((
     throw Exception(result.failure.message);
   }
   return [];
+});
+
+final localeProvider = StateProvider<Locale>((ref) {
+  return const Locale('en'); // Langue par défaut
 });

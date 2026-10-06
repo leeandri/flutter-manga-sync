@@ -20,14 +20,16 @@ class MangaRepositoryImpl implements MangaRepository {
       await localDataSource.cacheMangas(dataList);
 
       final mangas = dataList
-          .map((e) => Manga.fromKitsuJson(e as Map<String, dynamic>))
+          .map((e) => Manga.fromKitsuJson(Map<String, dynamic>.from(e as Map)))
           .toList();
       return Success(mangas);
     } on DioException {
       final cached = localDataSource.getCachedMangas();
       if (cached.isNotEmpty) {
         final mangas = cached
-            .map((e) => Manga.fromKitsuJson(e as Map<String, dynamic>))
+            .map(
+              (e) => Manga.fromKitsuJson(Map<String, dynamic>.from(e as Map)),
+            )
             .toList();
         return Success(mangas);
       }
@@ -46,7 +48,7 @@ class MangaRepositoryImpl implements MangaRepository {
       );
       final dataList = response.data['data'] as List;
       final mangas = dataList
-          .map((e) => Manga.fromKitsuJson(e as Map<String, dynamic>))
+          .map((e) => Manga.fromKitsuJson(Map<String, dynamic>.from(e as Map)))
           .toList();
       return Success(mangas);
     } on DioException {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_manga_sync/core/widgets/language_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_manga_sync/features/manga/presentation/providers/manga_providers.dart';
 import 'package:flutter_manga_sync/features/manga/presentation/screens/manga_detail_screen.dart';
@@ -11,7 +12,10 @@ class MangaFavoritesScreen extends ConsumerWidget {
     final favorites = ref.watch(favoritesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Favorites (Offline)')),
+      appBar: AppBar(
+        title: const Text('My Favorites (Offline)'),
+        actions: const [LanguageSelector()],
+      ),
       body: favorites.isEmpty
           ? const Center(child: Text('No favorite manga saved yet.'))
           : ListView.builder(

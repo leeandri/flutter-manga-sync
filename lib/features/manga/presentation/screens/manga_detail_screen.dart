@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_manga_sync/core/widgets/language_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_manga_sync/features/manga/domain/entities/manga.dart';
 import 'package:flutter_manga_sync/features/manga/presentation/providers/manga_providers.dart';
@@ -18,6 +19,7 @@ class MangaDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(manga.title),
         actions: [
+          const LanguageSelector(),
           IconButton(
             icon: Icon(
               isFavorite ? Icons.favorite : Icons.favorite_border,
