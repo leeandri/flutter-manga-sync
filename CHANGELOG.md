@@ -6,23 +6,33 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Complete test suite including unit, widget, and integration tests.
-- Offline support and local caching using Hive.
-- CI/CD workflow integration with GitHub Actions.
-- Performance and UI rendering optimizations.
+- Complete unit test suite (`test/unit_tests/unit_test.dart`) covering entities, JSON parsing, and failures.
+- Widget test suite (`test/widget_tests/widgets_test.dart`) testing core UI components.
+- End-to-end integration tests (`integration_test/app_test.dart`).
+- Full internationalization support with `app_en.arb` and `app_fr.arb`.
+- Accessibility enhancements using `Semantics` widgets for UI interactive elements.
 
-## [0.2.0] - 2026-09-20
+### Changed
+
+- Updated `README.md` with CI badge, i18n instructions, and project architecture details.
+
+## [0.2.0] - 2026-09-25
 
 ### Added
 
-- Favorites management with local persistence.
-- Riverpod state management implementation for manga list and search.
-- Details screen with chapters and metadata.
+- Complete authentication flow with registration, mock fallbacks, and JWT storage.
+- Integration of `getMangaListUseCase` with clean architecture layers and updated return types.
+- Favorites management with local offline persistence using Hive.
+
+### Fixed
+
+- Mock and provider test suite compilation errors and return type mismatches.
+- Resolved static analysis warnings and enhanced overall test coverage.
 
 ## [0.1.0] - 2026-09-01
 
 ### Added
 
-- Initial project setup with Flutter and clean architecture.
-- Base UI design and navigation flow.
-- Remote data source integration for manga retrieval.
+- Initial project setup with Flutter, Clean Architecture (Feature-First), and Riverpod.
+- Base UI design and navigation routing.
+- Remote data source integration using Dio and Kitsu REST API.
